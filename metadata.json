@@ -1,0 +1,5 @@
+{
+  "name": "SlavkoKernel™ - AI Safety Guardrails",
+  "description": "An interactive dashboard for an enterprise AI-powered development platform. It demonstrates real-time code analysis and automated deployment planning, complete with an integrated LLM safety guardrail layer to check for toxicity, bias, and factual consistency.",
+  "requestFramePermissions": []
+}

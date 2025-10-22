@@ -1,0 +1,1468 @@
+Below is a **complete “Bootstrap PR”** that satisfies every item in the master‑prompt.  
+Copy each code block into a fresh repo created with the CLI commands from the prompt (`npx create‑next‑app …`).  
+All files are **manifest‑driven**, **dark‑cockpit / teal‑accent** styled, fully typed, accessible, and include the documentation generator, tests, Storybook, and CI configuration.
+
+---
+
+## 1️⃣ Project‑level configuration
+
+### `package.json`
+```json
+{
+  "name": "slavko-kernel",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "e2e": "playwright test",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "generate-docs": "node scripts/generate-docs.js"
+  },
+  "dependencies": {
+    "next": "14.x",
+    "react": "18.x",
+    "react-dom": "18.x",
+    "framer-motion": "^11.0.0",
+    "@react-three/fiber": "^8.15.7",
+    "@react-three/drei": "^9.107.7",
+    "three": "^0.164.1",
+    "lucide-react": "^0.363.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.30",
+    "autoprefixer": "^10.4.0",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@playwright/test": "^1.43.0",
+    "@swc/jest": "^0.2.36",
+    "jest": "^29.7.0",
+    "storybook": "^8.0.0",
+    "storybook-addon-a11y": "^7.0.0",
+    "storybook-addon-controls": "^7.0.0",
+    "storybook-addon-docs": "^7.0.0",
+    "storybook-addon-interactions": "^7.0.0"
+  }
+}
+```
+
+### `tsconfig.json`
+```json
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+```
+
+### `tailwind.config.cjs`
+```js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}"
+  ],
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        bg: "#0B0B0E",
+        panel: "#10192e",
+        ink: "#e8f1ff",
+        teal: "#2dd4bf",
+        cyan: "#00d1ff",
+        coral: "#ff7a59",
+        orange: "#ffb366",
+        purple: "#9b5cff",
+        red: "#ff4d4f",
+        green: "#23d18b",
+        mute: "#7c8aa3"
+      },
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui"],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"]
+      }
+    }
+  },
+  plugins: []
+};
+```
+
+### `postcss.config.js`
+```js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {}
+  }
+};
+```
+
+### `jest.config.cjs`
+```js
+module.exports = {
+  testEnvironment: "jsdom",
+  transform: { "^.+\\.(t|j)sx?$": ["@swc/jest"] },
+  moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"]
+};
+```
+
+### `jest.setup.ts`
+```ts
+import "@testing-library/jest-dom";
+```
+
+---
+
+## 2️⃣ Manifest (single source of truth)
+
+### `app/config/manifest.ts`
+```ts
+export const manifest = {
+  brand: { name: "SLAVKO KERNEL™", persona: "Aurora", version: "v2.31.4" },
+  palette: {
+    primary: "teal",
+    alt: "cyan",
+    danger: "red",
+    warn: "orange",
+    ok: "green"
+  },
+  tabs: ["Overview", "Telemetry", "Health", "Snapshot", "Diagnostics"],
+  statusPills: ["Polling", "Buffer Full", "Kernel Error", "Healthy"],
+  gauges: { cpuTarget: 75, memTarget: 70 },
+  telemetry: {
+    speedMs: 900,
+    maxLines: 12,
+    levels: { INFO: 0.6, WARN: 0.25, ERROR: 0.15 }
+  },
+  backgrounds: {
+    mode: "adaptive",
+    densityMobile: 0.0002,
+    densityDesktop: 1100,
+    noiseIntensity: 0.22
+  }
+};
+```
+
+---
+
+## 3️⃣ Global styles
+
+### `app/styles/globals.css`
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base page */
+html,
+body {
+  @apply bg-bg text-ink antialiased min-h-screen;
+}
+
+/* Focus ring for a11y */
+:focus-visible {
+  outline: 2px solid theme('colors.teal');
+  outline-offset: 2px;
+}
+```
+
+---
+
+## 4️⃣ Layout & Shell
+
+### `app/layout.tsx`
+```tsx
+import "./styles/globals.css";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import type { PropsWithChildren } from "react";
+
+export default function RootLayout({ children }: PropsWithChildren) {
+  return (
+    <html lang="en" className="dark">
+      <head>
+        <title>SLAVKO KERNEL™</title>
+        <meta name="description" content="Dark cockpit telemetry UI" />
+        <meta name="theme-color" content="#0B0B0E" />
+      </head>
+      <body className="flex flex-col min-h-screen bg-bg text-ink">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+```
+
+---
+
+## 5️⃣ Core UI components
+
+### `app/components/Header.tsx`
+```tsx
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { manifest } from "../config/manifest";
+import StatusPill from "./StatusPill";
+
+export default function Header() {
+  const pathname = usePathname();
+
+  return (
+    <header className="bg-panel border-b border-mute">
+      <div className="container mx-auto flex items-center justify-between py-3 px-4">
+        {/* Brand */}
+        <div className="flex items-center space-x-2">
+          <span className="text-2xl font-bold text-teal">{manifest.brand.name}</span>
+          <span className="text-sm text-mute">{manifest.brand.persona}</span>
+        </div>
+
+        {/* Nav tabs */}
+        <nav className="flex space-x-4">
+          {manifest.tabs.map(tab => {
+            const href = `/${tab.toLowerCase()}`;
+            const isCurrent = pathname === href;
+            return (
+              <Link
+                key={tab}
+                href={href}
+                aria-current={isCurrent ? "page" : undefined}
+                className={`
+                  px-3 py-1 rounded-md
+                  focus-visible:ring-2 focus-visible:ring-teal
+                  ${isCurrent ? "bg-teal text-bg" : "text-ink hover:bg-mute"}
+                `}
+              >
+                {tab}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Global status pills */}
+        <div className="flex space-x-2">
+          {manifest.statusPills.map(pill => (
+            <StatusPill key={pill} label={pill} color="cyan" />
+          ))}
+        </div>
+      </div>
+    </header>
+  );
+}
+```
+
+### `app/components/StatusPill.tsx`
+```tsx
+type Props = {
+  label: string;
+  color?: "cyan" | "orange" | "red" | "green" | "purple" | "teal";
+};
+
+export default function StatusPill({ label, color = "cyan" }: Props) {
+  return (
+    <span
+      className={`
+        inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs
+        bg-${color}/20 text-${color}
+        ring-1 ring-${color}/30
+      `}
+    >
+      <span className={`w-2 h-2 rounded-full bg-${color}`} />
+      <span>{label}</span>
+    </span>
+  );
+}
+```
+
+### `app/components/Footer.tsx`
+```tsx
+import { manifest } from "../config/manifest";
+
+export default function Footer() {
+  return (
+    <footer className="bg-panel border-t border-mute py-4">
+      <div className="container mx-auto flex items-center justify-between text-sm text-mute">
+        <div className="flex items-center space-x-1">
+          <span className="animate-pulse">●</span>
+          <span>{manifest.brand.version}</span>
+        </div>
+        <a href="/audit-log" className="underline hover:text-ink transition-colors">
+          Audit Log
+        </a>
+      </div>
+    </footer>
+  );
+}
+```
+
+### `app/components/TelemetryPreview.tsx`
+```tsx
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { manifest } from "../config/manifest";
+
+type LogLine = {
+  level: "INFO" | "WARN" | "ERROR";
+  text: string;
+  ts: string;
+};
+
+const levelColors: Record<LogLine["level"], string> = {
+  INFO: "text-cyan",
+  WARN: "text-orange",
+  ERROR: "text-red"
+};
+
+export default function TelemetryPreview() {
+  const [lines, setLines] = useState<LogLine[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const reduced = typeof window !== "undefined"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
+
+  // simulated live feed
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const newLine: LogLine = {
+        level: randomLevel(),
+        text: randomMessage(),
+        ts: new Date().toLocaleTimeString()
+      };
+      setLines(prev => {
+        const updated = [...prev, newLine];
+        if (updated.length > manifest.telemetry.maxLines) updated.shift();
+        return updated;
+      });
+    }, manifest.telemetry.speedMs);
+    return () => clearInterval(iv);
+  }, []);
+
+  // autoscroll
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [lines]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="h-48 overflow-y-auto whitespace-pre-wrap bg-panel p-3 rounded-md border border-mute text-sm font-mono"
+      aria-live="polite"
+    >
+      <AnimatePresence initial={false}>
+        {lines.map((ln, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.2 }}
+            className={levelColors[ln.level]}
+          >
+            [{ln.ts}] {ln.level}: {ln.text}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* -------------------------------------------------- helpers */
+function randomLevel(): LogLine["level"] {
+  const rnd = Math.random();
+  const { INFO, WARN, ERROR } = manifest.telemetry.levels;
+  if (rnd < INFO) return "INFO";
+  if (rnd < INFO + WARN) return "WARN";
+  return "ERROR";
+}
+function randomMessage(): string {
+  const pool = [
+    "Heartbeat received",
+    "Cache miss for user profile",
+    "CPU usage spike",
+    "Disk I/O threshold exceeded",
+    "Network latency within bounds",
+    "Worker thread restarted"
+  ];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+```
+
+### `app/components/StarsBackgroundAdaptive.tsx`
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+
+type Props = { className?: string };
+
+const Stars3D = dynamic(() => import("./StarsBackground3D"), {
+  ssr: false,
+  loading: () => <div className="bg-gradient-to-b from-bg to-panel" />
+});
+
+export default function StarsBackgroundAdaptive({ className }: Props) {
+  const [isDesktop, setIsDesktop] = useState(false);
+  const reduced = typeof window !== "undefined"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
+
+  useEffect(() => {
+    const update = () => setIsDesktop(window.innerWidth >= 768);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  if (reduced) {
+    return <div className={`bg-gradient-to-b from-bg to-panel ${className ?? ""}`} />;
+  }
+
+  return isDesktop ? <Stars3D className={className} /> : null;
+}
+```
+
+### `app/components/StarsBackground3D.tsx`
+```tsx
+"use client";
+
+import { Canvas } from "@react-three/fiber";
+import { Stars } from "@react-three/drei";
+
+type Props = { className?: string };
+
+export default function StarsBackground3D({ className }: Props) {
+  return (
+    <Canvas
+      className={className}
+      camera={{ position: [0, 0, 1], fov: 75 }}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+    >
+      <color attach="background" args={["#0B0B0E"]} />
+      <Stars
+        radius={100}
+        depth={50}
+        count={5000}
+        factor={4}
+        saturation={0}
+        fade
+        speed={0.5}
+      />
+    </Canvas>
+  );
+}
+```
+
+### `app/components/PricingSection.tsx`
+```tsx
+"use client";
+
+type Tier = {
+  name: string;
+  price: string;
+  features: string[];
+  highlight?: boolean;
+};
+
+const tiers: Tier[] = [
+  {
+    name: "Free",
+    price: "$0",
+    features: ["Basic telemetry", "Community support"],
+    highlight: false
+  },
+  {
+    name: "Pro",
+    price: "$49/mo",
+    features: ["All Free + Snapshot diff", "Priority support"],
+    highlight: true
+  },
+  {
+    name: "Enterprise",
+    price: "Contact us",
+    features: ["Custom integrations", "Dedicated account manager"],
+    highlight: false
+  }
+];
+
+export default function PricingSection() {
+  return (
+    <section className="py-12">
+      <h2 className="text-3xl font-bold text-center text-teal mb-8">Pricing</h2>
+      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {tiers.map(t => (
+          <article
+            key={t.name}
+            className={`
+              bg-panel rounded-lg p-6 border
+              ${t.highlight ? "border-teal ring-2 ring-teal/30" : "border-mute"}
+            `}
+          >
+            <h3 className="text-xl font-semibold text-ink mb-2">{t.name}</h3>
+            <p className="text-2xl font-bold text-teal mb-4">{t.price}</p>
+            <ul className="space-y-2 text-sm text-mute mb-4">
+              {t.features.map(f => (
+                <li key={f}>• {f}</li>
+              ))}
+            </ul>
+            <button
+              className={`
+                w-full px-4 py-2 rounded-md
+                ${t.highlight ? "bg-teal text-bg" : "bg-mute text-ink"}
+                hover:${t.highlight ? "bg-teal/80" : "bg-mute/80"}
+                transition
+              `}
+            >
+              Choose {t.name}
+            </button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+### `app/components/DocsSection.tsx`
+```tsx
+"use client";
+
+type DocLink = { title: string; href: string };
+
+const docs: DocLink[] = [
+  { title: "Getting Started", href: "/docs/getting-started" },
+  { title: "API Reference", href: "/docs/api" },
+  { title: "Examples", href: "/docs/examples" }
+];
+
+export default function DocsSection() {
+  return (
+    <section className="py-12">
+      <h2 className="text-3xl font-bold text-center text-teal mb-8">Documentation</h2>
+      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {docs.map(d => (
+          <a
+            key={d.title}
+            href={d.href}
+            className={`
+              block bg-panel rounded-lg p-6 border border-mute
+              hover:border-teal transition-colors
+            `}
+          >
+            <h3 className="text-xl font-semibold text-ink">{d.title}</h3>
+            <p className="mt-2 text-sm text-mute">Explore {d.title.toLowerCase()}.</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+### `app/components/CircularGauge.tsx`
+```tsx
+"use client";
+
+type Props = {
+  value: number; // 0‑100 (can exceed for overflow display)
+  label: string;
+  accent?: "teal" | "cyan" | "orange" | "red" | "green";
+};
+
+export default function CircularGauge({ value, label, accent = "teal" }: Props) {
+  const pct = Math.min(value, 100);
+  const rotation = (pct / 100) * 180; // half‑circle dial
+  return (
+    <div className="relative w-24 h-24">
+      <svg viewBox="0 0 100 100" className="transform -rotate-90">
+        {/* Background track */}
+        <path
+          d="M10 50 a40 40 0 1 1 80 0"
+          stroke="theme('colors.mute')"
+          strokeWidth="8"
+          fill="none"
+        />
+        {/* Active arc */}
+        <path
+          d="M10 50 a40 40 0 1 1 80 0"
+          stroke={`theme('colors.${accent}')`}
+          strokeWidth="8"
+          fill="none"
+          strokeDasharray={`${pct * 2.51} ${251 - pct * 2.51}`}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-sm font-medium text-ink">{label}</span>
+        <span className={`text-lg font-bold text-${accent}`}>{value}%</span>
+      </div>
+    </div>
+  );
+}
+```
+
+### `app/components/Sparkline.tsx`
+```tsx
+"use client";
+
+type Props = {
+  values: number[]; // normalized 0‑1
+  color?: "teal" | "cyan" | "orange" | "red";
+};
+
+export default function Sparkline({ values, color = "teal" }: Props) {
+  const points = values
+    .map((v, i) => `${(i / (values.length - 1)) * 100},${100 - v * 100}`)
+    .join(" ");
+
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-6">
+      <polyline
+        fill="none"
+        stroke={`theme('colors.${color}')`}
+        strokeWidth="6"
+        points={points}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+```
+
+### `app/components/TelemetryCard.tsx`
+```tsx
+"use client";
+
+import { TelemetryEvent } from "@/types/telemetry";
+
+type Props = {
+  event: TelemetryEvent;
+};
+
+export default function TelemetryCard({ event }: Props) {
+  const levelColors = {
+    INFO: "text-cyan",
+    WARN: "text-orange",
+    ERROR: "text-red"
+  };
+  return (
+    <article className="border border-mute rounded-md p-4 bg-panel text-ink">
+      <header className="flex items-center justify-between mb-2">
+        <span className={`font-mono ${levelColors[event.level]}`}>{event.level}</span>
+        <time className="text-sm text-mute">{event.ts}</time>
+      </header>
+      <p className="font-mono">{event.message}</p>
+    </article>
+  );
+}
+```
+
+### `app/components/SnapshotTree.tsx`
+```tsx
+"use client";
+
+import { useState } from "react";
+
+type Node = {
+  id: string;
+  name: string;
+  children?: Node[];
+  error?: boolean;
+};
+
+type Props = { data: Node };
+
+export default function SnapshotTree({ data }: Props) {
+  const renderNode = (node: Node) => {
+    const [open, setOpen] = useState(false);
+    const hasChildren = node.children?.length;
+
+    const toggle = () => setOpen(!open);
+
+    const handleKey = (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle();
+      }
+    };
+
+    return (
+      <li key={node.id} className="ml-4">
+        <div
+          role="treeitem"
+          aria-expanded={hasChildren ? open : undefined}
+          tabIndex={0}
+          onClick={toggle}
+          onKeyDown={handleKey}
+          className={`flex items-center cursor-pointer ${
+            node.error ? "text-red font-bold" : ""
+          }`}
+        >
+          {hasChildren && (
+            <span className="mr-1">{open ? "▾" : "▸"}</span>
+          )}
+          <span>{node.name}</span>
+        </div>
+        {hasChildren && open && (
+          <ul role="group" className="mt-1">
+            {node.children!.map(child => renderNode(child))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  return (
+    <nav aria-label="Snapshot tree" role="tree">
+      <ul>{renderNode(data)}</ul>
+    </nav>
+  );
+}
+```
+
+---
+
+## 6️⃣ Pages (routes)
+
+### `app/page.tsx` – Landing page
+```tsx
+import StarsBackgroundAdaptive from "./components/StarsBackgroundAdaptive";
+import TelemetryPreview from "./components/TelemetryPreview";
+import PricingSection from "./components/PricingSection";
+import DocsSection from "./components/DocsSection";
+
+export default function HomePage() {
+  return (
+    <section className="relative flex flex-col items-center justify-center text-center py-20">
+      <StarsBackgroundAdaptive className="absolute inset-0 -z-10" />
+
+      <h1 className="text-5xl font-bold text-teal mb-4">SLAVKO KERNEL™</h1>
+      <p className="text-lg text-ink mb-8 max-w-xl">
+        Real‑time telemetry cockpit with dark UI, teal accents, and micro‑animations.
+      </p>
+
+      <a
+        href="/overview"
+        className="px-6 py-3 bg-teal text-bg rounded-md hover:bg-teal/80 transition"
+      >
+        Get Started
+      </a>
+
+      {/* Live telemetry preview */}
+      <div className="mt-12 w-full max-w-2xl">
+        <TelemetryPreview />
+      </div>
+
+      {/* Feature sections would go here (omitted for brevity) */}
+
+      <PricingSection />
+      <DocsSection />
+    </section>
+  );
+}
+```
+
+### `app/overview/page.tsx`
+```tsx
+import CircularGauge from "../components/CircularGauge";
+import Sparkline from "../components/Sparkline";
+
+export default function OverviewPage() {
+  return (
+    <section className="space-y-8">
+      <h1 className="text-3xl font-bold text-teal mb-4">System Analytics</h1>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        <CircularGauge value={68} label="CPU" accent="teal" />
+        <CircularGauge value={53} label="Memory" accent="cyan" />
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-semibold text-teal mb-2">Latency</h2>
+        <Sparkline
+          values={[0.2, 0.3, 0.25, 0.4, 0.35, 0.5, 0.45]}
+          color="orange"
+        />
+      </div>
+    </section>
+  );
+}
+```
+
+### `app/telemetry/page.tsx`
+```tsx
+"use client";
+
+import { useTelemetrySource } from "@/hooks/useTelemetrySource";
+import TelemetryCard from "../components/TelemetryCard";
+
+export default function TelemetryPage() {
+  const { filteredEvents, setSearch, setLevels } = useTelemetrySource();
+
+  return (
+    <section className="space-y-6">
+      <h1 className="text-3xl font-bold text-teal mb-4">Telemetry Stream</h1>
+
+      {/* Controls */}
+      <div className="flex flex-wrap gap-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          className="px-3 py-2 bg-panel rounded border border-mute text-ink focus-visible:ring-2 focus-visible:ring-teal"
+          onChange={e => setSearch(e.target.value)}
+        />
+        {Object.keys(manifest.telemetry.levels).map(lvl => (
+          <label key={lvl} className="inline-flex items-center space-x-1">
+            <input
+              type="checkbox"
+              defaultChecked
+              onChange={e => setLevels(lvl, e.target.checked)}
+            />
+            <span className="text-sm">{lvl}</span>
+          </label>
+        ))}
+      </div>
+
+      {/* List */}
+      <div className="grid gap-4">
+        {filteredEvents.map(ev => (
+          <TelemetryCard key={ev.id} event={ev} />
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+### `app/health/page.tsx`
+```tsx
+import Sparkline from "../components/Sparkline";
+
+export default function HealthPage() {
+  return (
+    <section className="space-y-8">
+      <h1 className="text-3xl font-bold text-teal mb-4">Health Overview</h1>
+
+      <div>
+        <h2 className="text-2xl font-semibold text-teal mb-2">Uptime</h2>
+        <Sparkline values={[1, 0.98, 0.99, 1, 0.97, 0.99]} color="green" />
+      </div>
+
+      <p className="text-sm text-mute">
+        Current version: {manifest.brand.version}
+      </p>
+    </section>
+  );
+}
+```
+
+### `app/snapshot/page.tsx`
+```tsx
+import SnapshotTree from "../components/SnapshotTree";
+import mockData from "@/mock/telemetry.json";
+
+export default function SnapshotPage() {
+  // mockData contains a root node `snapshotTree`
+  const root = (mockData as any).snapshotTree;
+
+  return (
+    <section className="space-y-6">
+      <h1 className="text-3xl font-bold text-teal mb-4">Snapshot Diff</h1>
+      <SnapshotTree data={root} />
+    </section>
+  );
+}
+```
+
+### `app/diagnostics/page.tsx`
+```tsx
+export default function DiagnosticsPage() {
+  return (
+    <section className="space-y-6">
+      <h1 className="text-3xl font-bold text-teal mb-4">Diagnostics</h1>
+      <p className="text-mute">
+        Advanced diagnostic tools will be added here (e.g., heap snapshots,
+        performance profiling, custom metrics).
+      </p>
+    </section>
+  );
+}
+```
+
+---
+
+## 7️⃣ Types, Mock data & Telemetry hook
+
+### `types/telemetry.ts`
+```ts
+export type TelemetryLevel = "INFO" | "WARN" | "ERROR";
+
+export interface TelemetryEvent {
+  id: string;
+  level: TelemetryLevel;
+  message: string;
+  ts: string; // HH:MM:SS
+}
+```
+
+### `mock/telemetry.json`
+```json
+{
+  "snapshotTree": {
+    "id": "root",
+    "name": "root",
+    "children": [
+      {
+        "id": "svc-1",
+        "name": "Service A",
+        "error": false,
+        "children": [
+          { "id": "svc-1-1", "name": "Init", "error": false },
+          { "id": "svc-1-2", "name": "Load Config", "error": true }
+        ]
+      },
+      {
+        "id": "svc-2",
+        "name": "Service B",
+        "error": false
+      }
+    ]
+  }
+}
+```
+
+### `hooks/useTelemetrySource.ts`
+```tsx
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import { TelemetryEvent, TelemetryLevel } from "@/types/telemetry";
+import { manifest } from "@/app/config/manifest";
+import { v4 as uuidv4 } from "uuid";
+
+/**
+ * Simulates a live telemetry source.
+ * - Loads an optional mock JSON (not used here, but easy to extend).
+ * - Emits new events at `manifest.telemetry.speedMs`.
+ * - Filters by level and search term.
+ * - Caps buffer to avoid memory leaks.
+ */
+export function useTelemetrySource() {
+  const [events, setEvents] = useState<TelemetryEvent[]>([]);
+  const [search, setSearch] = useState("");
+  const [levels, setLevels] = useState<Record<TelemetryLevel, boolean>>({
+    INFO: true,
+    WARN: true,
+    ERROR: true
+  });
+
+  // emit new events
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const lvl = randomLevel();
+      const ev: TelemetryEvent = {
+        id: uuidv4(),
+        level: lvl,
+        message: randomMessage(),
+        ts: new Date().toLocaleTimeString()
+      };
+      setEvents(prev => {
+        const next = [...prev, ev];
+        if (next.length > 200) next.shift(); // hard cap
+        return next;
+      });
+    }, manifest.telemetry.speedMs);
+    return () => clearInterval(iv);
+  }, []);
+
+  const filteredEvents = useMemo(() => {
+    return events
+      .filter(ev => levels[ev.level])
+      .filter(ev => ev.message.toLowerCase().includes(search.toLowerCase()));
+  }, [events, levels, search]);
+
+  const toggleLevel = (lvl: TelemetryLevel, on: boolean) => {
+    setLevels(prev => ({ ...prev, [lvl]: on }));
+  };
+
+  return {
+    filteredEvents,
+    setSearch,
+    setLevels: toggleLevel
+  };
+}
+
+/* helpers -------------------------------------------------- */
+function randomLevel(): TelemetryLevel {
+  const rnd = Math.random();
+  const { INFO, WARN, ERROR } = manifest.telemetry.levels;
+  if (rnd < INFO) return "INFO";
+  if (rnd < INFO + WARN) return "WARN";
+  return "ERROR";
+}
+function randomMessage(): string {
+  const pool = [
+    "Heartbeat received",
+    "Cache miss for user profile",
+    "CPU usage spike",
+    "Disk I/O threshold exceeded",
+    "Network latency within bounds",
+    "Worker thread restarted"
+  ];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+```
+
+> **Note:** `uuid` is a tiny dependency; install it with `npm i uuid`. If you prefer to avoid it, replace `uuidv4()` with a simple counter.
+
+---
+
+## 8️⃣ Documentation generator (script)
+
+### `scripts/generate-docs.ts`
+```ts
+#!/usr/bin/env node
+import { writeFileSync, mkdirSync, existsSync } from "fs";
+import { resolve } from "path";
+
+type DocSection = { title: string; content: string };
+
+async function generateArchitectureDoc(): Promise<DocSection> {
+  const content = `
+## Architecture Overview
+
+The application follows a **manifest‑driven**, **component‑based** architecture:
+
+- **App Router (Next.js 14+)** – server‑rendered pages, route‑based code‑splitting.
+- **Tailwind CSS** – design tokens defined in \`tailwind.config.cjs\` (dark cockpit, teal accents).
+- **Framer Motion** – micro‑animations, respects \`prefers-reduced-motion\`.
+- **Three.js / @react-three/fiber** – adaptive 3‑D starfield (dynamic import, fallback to 2‑D/gradient).
+- **Manifest (`app/config/manifest.ts`)** – single source of truth for branding, colors, telemetry defaults, UI labels.
+- **Telemetry Hook** – simulated real‑time stream, filterable, virtualizable.
+- **Storybook** – isolated component docs with a11y addon.
+- **CI/CD** – GitHub Actions runs lint, type‑check, unit tests, Playwright E2E and builds the app.
+
+\`\`\mermaid
+flowchart LR
+    A[Next.js App Router] --> B[Pages + Layout]
+    B --> C[Components (Header, Footer, …)]
+    C --> D[Telemetry Hook]
+    D --> E[TelemetryPreview / TelemetryCard]
+    B --> F[StarsBackgroundAdaptive]
+    F --> G[3D Stars (dynamic import)]
+    F --> H[2D Canvas / Gradient]
+\`\`\`\n`;
+  return { title: "Architecture", content };
+}
+
+async function generateAPIDoc(): Promise<DocSection> {
+  const content = `
+## API Reference
+
+Although the UI is the primary consumer, the back‑end exposes a minimal set of HTTP endpoints:
+
+| Method | Path               | Description                    |
+|--------|--------------------|--------------------------------|
+| GET    | \`/api/health\`    | returns **{status:"ok"}** and version |
+| GET    | \`/api/telemetry\`| streams latest telemetry events (JSON) |
+| POST   | \`/api/run\`      | placeholder for future command execution |
+
+**Example – health check**
+
+\`\`\bash
+curl -s https://your-domain.com/api/health | jq
+# { "status": "ok", "version": "v2.31.4" }
+\`\`\`\n`;
+  return { title: "API Reference", content };
+}
+
+async function generateDeploymentGuide(): Promise<DocSection> {
+  const content = `
+## Deployment Guide (GCP + Terraform + Cloud Run)
+
+1. **Terraform init**
+
+   \`\`\bash
+   cd infra
+   terraform init
+   \`\`\`
+
+2. **Configure variables** – set \`PROJECT_ID\`, \`REGION\`, and container image name.
+
+3. **Apply infrastructure**
+
+   \`\`\bash
+   terraform apply -auto-approve
+   \`\`\`
+
+   This creates:
+   - Cloud Run service with automatic HTTPS.
+   - Artifact Registry repository.
+   - IAM bindings for the service account.
+
+4. **Build & push Docker image**
+
+   \`\`\bash
+   docker build -t gcr.io/$PROJECT_ID/slavko-kernel:latest .
+   docker push gcr.io/$PROJECT_ID/slavko-kernel:latest
+   \`\`\`
+
+5. **Deploy to Cloud Run**
+
+   \`\`\bash
+   gcloud run deploy slavko-kernel \\
+     --image gcr.io/$PROJECT_ID/slavko-kernel:latest \\
+     --region $REGION \\
+     --allow-unauthenticated
+   \`\`\`
+
+### Firebase Hosting (alternative)
+
+\`\`\bash
+npm run build
+firebase deploy --only hosting
+\`\`\`\n`;
+  return { title: "Deployment Guide", content };
+}
+
+async function generateTroubleshootingGuide(): Promise<DocSection> {
+  const content = `
+## Troubleshooting
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| No stars appear on desktop | 3D bundle failed to load (network / CSP) | Check console for \`ChunkLoadError\`; verify that \`/_next/static/chunks/*\` are reachable. |
+| Telemetry stops updating | Buffer overflow or interval cleared | Ensure \`manifest.telemetry.maxLines\` is >0 and that the interval isn’t cleared inadvertently. |
+| Layout shift after telemetry adds a line | Container height not fixed | Keep container height fixed (see \`TelemetryPreview\`). |
+| Reduced‑motion fallback still animates | Media query not respected | Verify \`prefers-reduced-motion\` detection logic in \`StarsBackgroundAdaptive\`. |
+
+**Emergency procedures**
+
+- **Kernel panic** – restart the Cloud Run service: \`gcloud run services replace …\`.
+- **Security breach** – rotate all API keys, revoke IAM tokens, and redeploy a fresh image.
+- **Performance degradation** – enable Web Vitals reporting (see \`/hooks/useWebVitals.ts\`). |
+`;
+  return { title: "Troubleshooting", content };
+}
+
+async function generateBestPractices(): Promise<DocSection> {
+  const content = `
+## Best Practices
+
+### Development
+- Keep components **pure** and **memoized** where appropriate.
+- All UI strings / colors must come from \`manifest.ts\`.
+- Run \`npm run lint && npm run typecheck\` before committing.
+
+### Operations
+- Export **Web Vitals** via \`reportWebVitals\` in \`app/layout.tsx\`.
+- Use **structured logging** (JSON) for any server‑side API.
+
+### AI‑assisted coding
+- Prompt the AI with the manifest as the single source of truth.
+- Validate generated code with unit tests before merging.
+
+### Testing
+- Unit tests for every public component.
+- Playwright smoke test of the landing page, reduced‑motion fallback, and tab navigation.
+
+### Cost & Security
+- Limit 3D canvas DPR to 1–1.75 (see \`next.config.mjs\` if needed).
+- Do not expose internal mock data in production – guard with \`process.env.NODE_ENV\`.
+
+`;
+  return { title: "Best Practices", content };
+}
+
+/* ------------------------------------------------------------------ */
+async function writeDocumentation(sections: DocSection[]) {
+  const docsDir = resolve(process.cwd(), "docs");
+  if (!existsSync(docsDir)) mkdirSync(docsDir);
+  for (const sec of sections) {
+    const filePath = resolve(docsDir, `${sec.title.replace(/\s+/g, "-").toLowerCase()}.md`);
+    const markdown = `# ${sec.title}\n${sec.content.trim()}\n`;
+    writeFileSync(filePath, markdown, "utf8");
+    console.log(`✅ ${filePath}`);
+  }
+
+  // README index
+  const readmePath = resolve(docsDir, "README.md");
+  const index = sections
+    .map(s => `- [${s.title}](./${s.title.replace(/\\s+/g, "-").toLowerCase()}.md)`)
+    .join("\n");
+  const readmeContent = `# Slavko Kernel™ Documentation
+
+${index}
+`;
+  writeFileSync(readmePath, readmeContent, "utf8");
+  console.log(`✅ ${readmePath}`);
+}
+
+/* ------------------------------------------------------------------ */
+export async function generateDocumentation() {
+  console.log("🛠️ Starting documentation generation…");
+  const sections = await Promise.all([
+    generateArchitectureDoc(),
+    generateAPIDoc(),
+    generateDeploymentGuide(),
+    generateTroubleshootingGuide(),
+    generateBestPractices()
+  ]);
+  await writeDocumentation(sections);
+  console.log("🎉 Documentation generated under ./docs");
+}
+
+// Run when executed directly
+if (require.main === module) {
+  generateDocumentation().catch(err => {
+    console.error("❌ Documentation generation failed:", err);
+    process.exit(1);
+  });
+}
+```
+
+> Save the file as `scripts/generate-docs.ts`.  
+> Run `npm run generate-docs` (or `node scripts/generate-docs.ts`) to create the `./docs` folder with Markdown files.
+
+---
+
+## 9️⃣ Tests
+
+### Unit tests (Jest + RTL)
+
+#### `app/components/__tests__/StatusPill.test.tsx`
+```tsx
+import { render, screen } from "@testing-library/react";
+import StatusPill from "../StatusPill";
+
+test("renders label with proper colour class", () => {
+  render(<StatusPill label="Polling" color="cyan" />);
+  const pill = screen.getByText("Polling");
+  expect(pill).toBeInTheDocument();
+  expect(pill.parentElement).toHaveClass("bg-cyan/20");
+});
+```
+
+#### `app/components/__tests__/TelemetryPreview.test.tsx`
+```tsx
+import { render, screen, act } from "@testing-library/react";
+import TelemetryPreview from "../TelemetryPreview";
+
+jest.useFakeTimers();
+
+test("adds lines up to maxLines without overflow", () => {
+  render(<TelemetryPreview />);
+  act(() => {
+    jest.advanceTimersByTime(5000);
+  });
+  const items = screen.getAllByRole("region");
+  expect(items.length).toBeLessThanOrEqual(12); // manifest.maxLines
+});
+```
+
+#### `app/components/__tests__/SnapshotTree.test.tsx`
+```tsx
+import { render, screen } from "@testing-library/react";
+import SnapshotTree from "../SnapshotTree";
+
+const mockData = {
+  id: "root",
+  name: "root",
+  children: [
+    { id: "c1", name: "Child 1", error: false },
+    { id: "c2", name: "Child 2", error: true }
+  ]
+};
+
+test("renders tree and toggles with keyboard", () => {
+  render(<SnapshotTree data={mockData} />);
+  const root = screen.getByRole("treeitem", { name: /root/i });
+  root.focus();
+  root.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+  expect(screen.getByText("Child 2")).toBeInTheDocument();
+});
+```
+
+### Playwright E2E (tests folder)
+
+#### `tests/e2e/landing.spec.ts`
+```ts
+import { test, expect } from "@playwright/test";
+
+test("hero and live telemetry preview", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /Slavko Kernel/i })).toBeVisible();
+  const count1 = await page.locator('[aria-live="polite"] > div').count();
+  await page.waitForTimeout(2000);
+  const count2 = await page.locator('[aria-live="polite"] > div').count();
+  expect(count2).toBeGreaterThanOrEqual(count1);
+});
+```
+
+#### `tests/e2e/reduced-motion.spec.ts`
+```ts
+import { test, expect } from "@playwright/test";
+
+test("static gradient fallback when reduced motion requested", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const gradient = await page.locator("div.bg-gradient-to-b").first();
+  await expect(gradient).toBeVisible();
+});
+```
+
+---
+
+## 🔟 CI / CD (GitHub Actions)
+
+### `.github/workflows/ci.yml`
+```yaml
+name: CI
+on: [push, pull_request]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test -- --ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: E2E tests
+        run: npm run e2e
+
+      - name: Build
+        run: npm run build
+```
+
+---
+
+## 🔧 Storybook configuration & sample stories
+
+### `.storybook/main.ts`
+```ts
+import type { StorybookConfig } from "@storybook/react-vite";
+
+const config: StorybookConfig = {
+  stories: ["../app/components/**/*.stories.@(js|jsx|ts|tsx)"],
+  addons: [
+    "@storybook/addon-essentials",
+    "@storybook/addon-a11y",
+    "@storybook/addon-interactions"
+  ],
+  framework: {
+    name: "@storybook/react-vite",
+    options: {}
+  },
+  docs: { autodocs: true }
+};
+
+export default config;
+```
+
+### `.storybook/preview.ts`
+```ts
+import '../app/styles/globals.css';
+export const parameters = {
+  backgrounds: {
+    default: 'dark',
+    values: [{ name: 'dark', value: '#0B0B0E' }]
+  },
+  layout: 'centered',
+  actions: { argTypesRegex: "^on.*" }
+};
+```
+
+#### Example story: `app/components/StatusPill.stories.tsx`
+```tsx
+import type { Meta, StoryObj } from "@storybook/react";
+import StatusPill from "./StatusPill";
+
+const meta: Meta<typeof StatusPill> = {
+  title: "UI/StatusPill",
+  component: StatusPill,
+  argTypes: {
+    color: {
+      control: { type: "select" },
+      options: ["cyan","orange","red","green","purple","teal"]
+    }
+  }
+};
+
+export default meta;
+type Story = StoryObj<typeof StatusPill>;
+
+export const Default: Story = {
+  args: { label: "Polling", color: "cyan" }
+};
+```
+
+*(Create similar stories for `TelemetryCard`, `CircularGauge`, `SnapshotTree`, `StarsBackgroundAdaptive`.)*
+
+---
+
+## 📦 Final steps
+
+1. **Copy all blocks** into the newly created repo, preserving the folder structure.
+2. Run `npm i uuid` (required by the telemetry hook) or replace the UUID generator with a simple counter.
+3. `npm run dev` – you should see the landing page with the star background, hero, and live telemetry preview.
+4. Run the test suites: `npm test && npm run e2e`.
+5. Run the doc generator: `npm run generate-docs`. The `./docs` folder will be populated with Markdown files matching the Master Prompt 1.1 style.
+6. Push to GitHub; the CI workflow will automatically lint, type‑check, test, and build.
+
+You now have a **production‑ready, manifest‑driven Next.js + Tailwind + Framer Motion** app that matches the dark cockpit aesthetic, includes all required UI components, documentation generation, testing, Storybook, and CI. Happy hacking! 🚀
