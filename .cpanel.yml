@@ -1,8 +1,6 @@
 ﻿---
 deployment:
   tasks:
-    - export NODE_ENV=production
     - /opt/cpanel/ea-nodejs18/bin/npm install
     - /opt/cpanel/ea-nodejs18/bin/npm run build
-    - rm -rf /home/formatdi/public_html/*
     - cp -r dist/* /home/formatdi/public_html/
